@@ -22,6 +22,7 @@ prompt_user_complaint = config.get('prompt_texts', 'prompt_user_complaint')
 prompt_user_complaint_tuned_json = config.get('prompt_texts', 'prompt_user_complaint_tuned_json')
 classification_prompt = config.get('prompt_texts', 'classification_prompt')
 classification_prompt_enhanced = config.get('prompt_texts', 'classification_prompt_enhanced')
+responding_to_customer = config.get('prompt_texts', 'responding_to_customer')
 
 #comet_callback = CometCallbackHandler(
 #    project_name="comet-example-langchain",
@@ -104,11 +105,49 @@ def classify_complaints():
         response = conversation.predict(input=complaint)
         print(response)
 
+def respond_to_user():
+    global api_key_input
+    global responding_to_customer
+
+    user_complaint = [{
+                        "ticket_no": "123456",
+                        "customer_name": "John Doe",
+                        "user_complaint": "I lost my money. I cannot afford to pay my rent.",
+                        "priority": "3",
+                        "category": "N/A",
+                        "product_mentions": "N/A",
+                        "comments": "I am not sure if this is really a complaint of our service"
+                    }, 
+                    {
+                        "ticket_no": "102839",
+                        "customer_name": "Amy Winehouse",
+                        "user_complaint": "I ordered a pair of shoes two weeks ago and still haven't received them. The tracking information hasn't been updated in days and I have no idea where my package is.",
+                        "priority": "3",
+                        "category": "Late or Non-Delivery",
+                        "product_mentions": "shoes",
+                        "comments": "shoes may have been lost in transit, apologize to the customer and offer a refund or replacement"
+                    
+                    }
+                    ]
+
+    sys_prompt = setup_chat_prompt(responding_to_customer)
+    llm = OpenAI(temperature=0.9, openai_api_key=str(api_key_input))
+    memory = ConversationBufferMemory(return_messages=True)
+    conversation = ConversationChain(memory=memory, prompt=sys_prompt, llm=llm)
+    print("------ Response------")
+    for complaint in user_complaint:
+        complaint = str(complaint)
+        
+        response = conversation.predict(input=complaint)
+        print(response)
+        print("---------------------")
+
 
 def main():
     #menu_order()
     #customer_complaint()
-    classify_complaints()
+    #classify_complaints()
+    respond_to_user()
 
 if __name__ == '__main__':
     main()
